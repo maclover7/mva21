@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<head>
+  <title>mva21</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+   <style>
+     #map { height: 90vh; }
+
+     .legend {
+       line-height: 18px;
+       color: #555;
+       padding: 6px 8px;
+       background: white;
+       box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+       border-radius: 5px;
+     }
+
+     .legend i {
+       width: 18px;
+       height: 18px;
+       float: left;
+       margin-right: 8px;
+       opacity: 0.7;
+     }
+   </style>
+</head>
+
+<body>
+  <p><a href="https://data.wprdc.org/dataset/market-value-analysis-2021">mva21</a></p>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([40.4406, -79.9959], 12);
+    const categoryStyle = {
+      'A': '#9F87C7',
+      'B': '#7DA3DE',
+      'C': '#A2C0EB',
+      'D': '#82A6AD',
+      'E': '#92D4BF',
+      'F': '#F5A895',
+      'G': '#F7D163',
+      'H': '#FFD68F',
+      'I': '#F5F57A',
+      'J': '#DEDE3C',
+      'NC': 'green'
+    };
+
+    L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    fetch('/mva21.geojson')
+      .then(r => r.json())
+      .then((layer) => {
+        L.geoJSON(layer, {
+          onEachFeature: (feature, layer) => {
+            layer.on('click', () => {});
+          },
+          style: (feature) => ({ fillColor: categoryStyle[feature.properties.MVA21], fillOpacity: 0.40, opacity: 0 })
+        }).addTo(map);
+      });
+
+    fetch('/city.geojson')
+      .then(r => r.json())
+      .then(layer => L.geoJSON(layer, { style: { color: 'black', fillOpacity: 0 } }).addTo(map));
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = (map) => {
+      const div = L.DomUtil.create('div', 'legend');
+
+      for (var mvaCategory in categoryStyle) {
+        div.innerHTML += `<i style="background: ${categoryStyle[mvaCategory]}"></i> ${mvaCategory} <br>`;
+      }
+
+      return div;
+    };
+
+    legend.addTo(map);
+  </script>
+</body>
